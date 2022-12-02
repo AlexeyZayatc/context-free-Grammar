@@ -26,6 +26,9 @@ class Grammar:
         # аксиома (начальный символ грамматики)
         self.axiom = axiom
 
+    def __eq__(self,other):
+        return self.non_terminals == other.non_terminals and self.terminals==other.terminals and self.rules==other.rules and self.axiom==other.axiom
+
     def remove_unreachable_symbols(self) -> Grammar:
         """ Возвращает грамматику без недостижимых символов (при этом нынешнюю грамматику не меняет) """
         # достижимые нетерминалы
@@ -69,7 +72,7 @@ class Grammar:
         # если достижимые нетерминалы совпадают с теми,
         # что были изначально определены в грамматике, то возвращаем новую, идентичную этой грамматику
         if self.non_terminals == reachable_non_terminals:
-            return Grammar(self.non_terminals.copy(), self.terminals.copy(), self.rules.copy(), self.axiom)
+            return Grammar(self.non_terminals.copy(), reachable_terminals.copy(), self.rules.copy(), self.axiom)
 
         # в противном случае создаем новые правила вывода,
         # в которых будут все старые, кроме тех,
@@ -142,7 +145,7 @@ class Grammar:
 
                     # если правая часть содержит только хорошие символы и терминалы,
                     # то добавляем нетерминал к хорошим символам
-                    if self.is_contain_nn(rule_item, non_terminals):
+                    if self.is_contain_nn(self.rules[rule][i], non_terminals):
                         non_terminals.add(rule)
                         break
 
@@ -182,6 +185,7 @@ class Grammar:
     def remove_useless_symbols(self):
         """ Очень сложный алгоритм, спасибо, Алексей, Евгений """
         return self.is_not_empty().remove_unreachable_symbols()
+ 
 
 
 if __name__ == '__main__':
