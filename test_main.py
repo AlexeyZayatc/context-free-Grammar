@@ -226,13 +226,6 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(empty_grammar_no_rule_to_good_symbol.is_not_empty(ret_flag=BOOL_MODE))
 
     def test_grammar_is_not_empty_grammar_output(self):
-        # axiom -> good_rule | bad_rule | constant
-        # good_rule -> good-rule2 | bad-rule2
-        # bad_rule -> bad-rule2 | bad-rule3
-        # good_rule2-> constant | bad-rule4
-        # bad_rule2 -> bad-rule3
-        # bad_rule3 -> bad_rule4
-        # bad_rule4 -> bad_rule4
         test_case1: Grammar = Grammar(
             {'S', 'A', 'B', 'C', 'D', 'E', 'F', 'G'},
             {'a','b','c','d','e','f','g'},
