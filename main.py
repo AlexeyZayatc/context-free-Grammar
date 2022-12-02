@@ -184,8 +184,16 @@ class Grammar:
 
     def remove_useless_symbols(self):
         """ Очень сложный алгоритм, спасибо, Алексей, Евгений """
-        return self.is_not_empty().remove_unreachable_symbols()
- 
+
+        def remove_useless_symbols(self):
+            """ Очень сложный алгоритм, спасибо, Алексей, Евгений """
+            try:
+                without_useless = self.is_not_empty().remove_unreachable_symbols()
+            except Exception as e:
+                print(e)
+                return None
+            return without_useless
+
 
 
 if __name__ == '__main__':
