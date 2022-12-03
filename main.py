@@ -3,9 +3,6 @@ from __future__ import annotations
 import pprint
 from typing import Union
 
-GRAMMAR_MODE = 0
-BOOL_MODE = 1
-
 
 class Grammar:
     def __init__(self, non_terminals: set, terminals: set, rules: dict, axiom: str):
@@ -127,13 +124,13 @@ class Grammar:
         print(18 * "-")
 
     def is_contain_nn(self, string: str, symbols: set) -> bool:
+        if not string: return False
         for symbol in string:
             if symbol not in self.terminals and symbol not in symbols:
                 return False
         return True
 
-    def is_not_empty(self, ret_flag=GRAMMAR_MODE) -> Union[Grammar, bool]:
-        # Два множества для "хороших" символов
+    def get_good_non_terminals(self) -> set:
         non_terminals: set = set()
         good_non_terminals: set = non_terminals.copy()
 
@@ -153,34 +150,38 @@ class Grammar:
             # если за проход мы не добавили никакого нового хорошего символа
             if non_terminals == good_non_terminals:
                 break
-
+            
             good_non_terminals = non_terminals.copy()
+        return good_non_terminals
 
-        # если вызвали функцию с параметром 1,
-        # то она возвращает true (язык не пуст) либо false (язык пуст)
-        if ret_flag == BOOL_MODE:
-            return self.axiom in non_terminals
+    def is_not_empty(self) ->  bool:
+        return self.axiom in self.get_good_non_terminals()
 
-        # временный словарь правил
-        rules_copy = self.rules.copy()
-        for rule in self.rules:
+    def  remove_bad_non_terminals_and_rules(self):
+        good_non_terminals: set = self.get_good_non_terminals()
+        if self.axiom in good_non_terminals:
+            # временный словарь правил
+            rules_copy = self.rules.copy()
+            for rule in self.rules:
 
-            # если нетерминала нет в хороших символах,
-            # то удаляем его из словаря
-            if rule not in non_terminals:
-                rules_copy.pop(rule)
+                # если нетерминала нет в хороших символах,
+                # то удаляем его из словаря
+                if rule not in good_non_terminals:
+                    rules_copy.pop(rule)
 
-            # иначе оставляет только те правила,
-            # в правых частях которого содержатся
-            # только хорошие символы и терминалы
-            else:
-                rule_buffer = []
-                for i, rule_item in enumerate(self.rules[rule]):
-                    if self.is_contain_nn(rule_item, non_terminals):
-                        rule_buffer.append(rule_item)
+                # иначе оставляет только те правила,
+                # в правых частях которого содержатся
+                # только хорошие символы и терминалы
+                else:
+                    rule_buffer = []
+                    for i, rule_item in enumerate(self.rules[rule]):
+                        if self.is_contain_nn(rule_item, good_non_terminals):
+                            rule_buffer.append(rule_item)
 
-                rules_copy[rule] = rule_buffer
-        return Grammar(non_terminals, self.terminals, rules_copy, self.axiom)
+                    rules_copy[rule] = rule_buffer
+            return Grammar(good_non_terminals, self.terminals, rules_copy, self.axiom)
+        else:
+            return None
 
     def remove_useless_symbols(self):
         """ Очень сложный алгоритм, спасибо, Алексей, Евгений """
@@ -190,7 +191,7 @@ class Grammar:
             print(e)
             return None
         return without_useless
-
+ 
 
 
 if __name__ == '__main__':
@@ -204,8 +205,8 @@ if __name__ == '__main__':
 
     # G.print()
 
-    F = Grammar({'S'}, {'1', '0'}, {'S': ['0', '1', '0S', '1S']}, 'S')
-
+   # F = Grammar({'S'}, {'1', '0'}, {'S': ['0', '1', '0S', '1S']}, 'S')
+    F = Grammar({'A',}, {'0',}, {'A': ['']}, 'A')
     # E = Grammar({'S', 'A', 'B', 'C', 'D'}, {'1', '0', '2', '3'},
     #             {'A': ['B', 'A'], 'C': ['D', 'D2'], 'D': ['123', '1', '2', '3']}, 'S')
 
@@ -213,6 +214,5 @@ if __name__ == '__main__':
 
     F.print()
     pprint.pprint(vars(F))
-    F = F.remove_useless_symbols()
-    F.print()
-    pprint.pprint(vars(F))
+    print(F.is_not_empty())
+    F.is_not_empty()

@@ -2,7 +2,6 @@ from re import M
 import unittest
 
 from main import Grammar
-from main import BOOL_MODE, GRAMMAR_MODE
 
 
 class MyTestCase(unittest.TestCase):
@@ -183,9 +182,9 @@ class MyTestCase(unittest.TestCase):
             {'S': ['aAa'], 'A': ['bBb', 'Cdd'], 'B': ['cDc'], 'C': ['F'], 'D': ['abcd']},
             'S'
             )
-        self.assertTrue(empty_grammar.is_not_empty(ret_flag=BOOL_MODE))
-        self.assertTrue(empty_grammar_terminal_chain_achieved.is_not_empty(ret_flag=BOOL_MODE))
-        self.assertTrue(empty_grammar_terminal_chain_with_extra_routes.is_not_empty(ret_flag=BOOL_MODE))
+        self.assertTrue(empty_grammar.is_not_empty())
+        self.assertTrue(empty_grammar_terminal_chain_achieved.is_not_empty())
+        self.assertTrue(empty_grammar_terminal_chain_with_extra_routes.is_not_empty())
 
     def test_grammar_is_not_empty_when_its_empty(self):
         empty_grammar: Grammar = Grammar(
@@ -218,12 +217,13 @@ class MyTestCase(unittest.TestCase):
             {'S': ['AB'], 'C': ['aaa'], 'A':['BBB']},
             'S'
             )
-        
-        self.assertFalse(empty_grammar.is_not_empty(ret_flag=BOOL_MODE))
-        self.assertFalse(empty_grammar_no_axiom_rule.is_not_empty(ret_flag=BOOL_MODE))
-        self.assertFalse(empty_grammar_no_terminal_chain.is_not_empty(ret_flag=BOOL_MODE))
-        self.assertFalse(empty_grammar_no_terminal_chain_recursion.is_not_empty(ret_flag=BOOL_MODE))
-        self.assertFalse(empty_grammar_no_rule_to_good_symbol.is_not_empty(ret_flag=BOOL_MODE))
+        empty_grammar_lambda_rule: Grammar = Grammar({'A',}, {'0',}, {'A': ['']}, 'A')
+        self.assertFalse(empty_grammar.is_not_empty())
+        self.assertFalse(empty_grammar_no_axiom_rule.is_not_empty())
+        self.assertFalse(empty_grammar_no_terminal_chain.is_not_empty())
+        self.assertFalse(empty_grammar_no_terminal_chain_recursion.is_not_empty())
+        self.assertFalse(empty_grammar_no_rule_to_good_symbol.is_not_empty())
+        self.assertFalse(empty_grammar_lambda_rule.is_not_empty())
 
     def test_grammar_is_not_empty_grammar_output(self):
         test_case1: Grammar = Grammar(
@@ -252,7 +252,7 @@ class MyTestCase(unittest.TestCase):
                 },
             'S'
             )
-        test_case1=test_case1.is_not_empty(GRAMMAR_MODE)
+        test_case1=test_case1.remove_bad_non_terminals_and_rules()
         self.assertEqual(test_case1,test_case1_answer)
         
 if __name__ == '__main__':
