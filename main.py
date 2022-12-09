@@ -157,7 +157,7 @@ class Grammar:
     def is_not_empty(self) ->  bool:
         return self.axiom in self.get_good_non_terminals()
 
-    def  remove_bad_non_terminals_and_rules(self):
+    def remove_bad_non_terminals_and_rules(self):
         good_non_terminals: set = self.get_good_non_terminals()
         if self.axiom in good_non_terminals:
             # временный словарь правил
@@ -191,6 +191,81 @@ class Grammar:
             print(e)
             return None
         return without_useless
+
+    def copy(self):
+        new_grammar = Grammar(self.non_terminals.copy(),self.terminals.copy(), self.rules.copy(),self.axiom)
+        return new_grammar
+
+    def remove_left_recursion(self):
+        new_grammar = self.copy() #новая грамматика чтобы её вернуть
+        rule_array = tuple(self.rules) #упорядочил) нетерминалы
+        i = 0 #счетчик (кто мог ожидать?)
+        while True:
+             for o, rule_item in enumerate(new_grammar.rules[rule_array[i]]): #проверяю каждое правило
+                 if rule_item[0] == rule_array[i]: #если правило вызывает левую рекурсию, то
+                     new_non_terminal = rule_array[i]+'\'' #создаем новый нетерминал
+                     new_non_terminal_rules = []
+                     new_rules = [] 
+                     for m, temp_rule in enumerate(new_grammar.rules[rule_array[i]]): #проходим опять по каждому правилу
+                        if temp_rule[0]==rule_array[i]: #если вызывается левая рекурсия
+                             k = 0
+                             while k<len(temp_rule): #скипаем первые k повторений нашего нетерминала 
+                                 if temp_rule[k]==rule_array[i]: 
+                                     k+=1
+                                 else:
+                                     break
+                             if k==len(temp_rule):
+                                 continue
+                             new_temp_rule = (temp_rule[k:len(temp_rule)]) #оставляем только правую часть,после k повторений 
+                             new_non_terminal_rules.append(new_temp_rule)#добавляем это правило в правила нового нетерминала
+                             temp_list = list(new_temp_rule)
+                             temp_list.append(new_non_terminal) #создаем массив строк с нашего правила (чтобы туда можно было добавить правило со штрихом (то есть состоящее из 2 символов))
+                             new_non_terminal_rules.append(temp_list)#добавляем его в правило нового нетерминала
+                        else:#если правило не вызывает левую рекурсию, то добавляем его как есть 
+                             new_rules.append(temp_rule)  #(раньше тут был опять массив строк, но я убрал и вроде не ломается)
+                             temp_list = list(temp_rule).copy() 
+                             temp_list.append(new_non_terminal) #добавляем правило с нетерминалом со штрихом в конце
+                             new_rules.append(temp_list)
+                     new_grammar.rules[rule_array[i]]=new_rules #обновляем правила у изначального нетерминала
+                     new_grammar.non_terminals.add(new_non_terminal)
+                     new_grammar.rules.update({new_non_terminal : new_non_terminal_rules}) #добавляем новый нетерминал с его правилами
+                     break
+                 else:
+                     pass
+             if i==len(rule_array)-1: #выход из алгоритма
+                 break
+             j = 0
+             i+=1
+             while True:
+                 temp_rule = {rule_array[i] : []} #временные правила
+                 for o, rule_item in enumerate(new_grammar.rules[rule_array[i]]):
+                     if rule_item[0]==rule_array[j]: #если в нашем правиле в начале стоит нетерминал, который имеет индекс меньше, то заменяем его на правые части правил из НЕГО
+                         for n, rule_item_temp in enumerate(new_grammar.rules[rule_array[j]]):
+                             if type(rule_item_temp) == type('abc'):
+                                 temp_right_side = rule_item_temp
+                             else:
+                                 temp_right_side = rule_item_temp.copy()
+                             k = 0
+                             while k<len(rule_item): #скипаем первые k повторений нашего нетерминала (не проверил может ли тут быть пустота по итогу)
+                                 if rule_item[k]==rule_array[j]: 
+                                     k+=1
+                                 else:
+                                     break
+                             for k in range(k, len(rule_item)):
+                                 temp_right_side+=rule_item[k]
+                             temp_rule[rule_array[i]].append(temp_right_side)
+                     else: #если не стоит нетерминал то добавляем правило как есть без изменений
+                         temp_rule[rule_array[i]].append(rule_item)
+                 new_grammar.rules.update(temp_rule) #обновляем
+                 if j==i-1:
+                     break #
+                 else:
+                     j+=1
+             
+              
+        return new_grammar
+       
+
  
 
 
@@ -211,8 +286,15 @@ if __name__ == '__main__':
     #             {'A': ['B', 'A'], 'C': ['D', 'D2'], 'D': ['123', '1', '2', '3']}, 'S')
 
     H = Grammar({'A', 'B', 'S'}, {'a', 'b'}, {'S': ['aA'], 'A': ['AB'], 'B': ['b']}, 'S')
+    temp = Grammar({'A','B','C'},{'a','b'}, { 'A': ['BC','a'], 'B': ['CA','Ab'], 'C': ['AB', 'CC', 'a']}, 'A')
+    temp.print()
+    temp = temp.remove_left_recursion()
+    pprint.pprint(vars(temp))
+    temp.remove_useless_symbols()
+    temp.is_not_empty()
+    E = Grammar({'E','T','F'},{'+','(',')','*', 'a'},{'E': ['E+T', 'T'], 'T': ['T*F','F'], 'F': ['(E)','a']},'E')
+    E = E.remove_left_recursion()
+    pprint.pprint(vars(E))
+    E = E.remove_useless_symbols()
+    pprint.pprint(vars(E))
 
-    F.print()
-    pprint.pprint(vars(F))
-    print(F.is_not_empty())
-    F.is_not_empty()
