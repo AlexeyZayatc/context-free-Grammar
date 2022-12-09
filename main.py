@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import pprint
 from typing import Union
 
@@ -85,7 +84,7 @@ class Grammar:
             # и новыми правилами вывода
             return Grammar(reachable_non_terminals, reachable_terminals, new_rules, self.axiom)
 
-    def print(self) -> None:
+    def print(self):
         """ Функция печати грамматики"""
         print("-" * 18)
         print('Non-terminals: ')
@@ -112,9 +111,18 @@ class Grammar:
             rule = left_side + ' -> '
             for i in range(len(self.rules[left_side])):
                 if i != len(self.rules[left_side]) - 1:
-                    rule += self.rules[left_side][i] + " | "
-                else:
-                    rule += self.rules[left_side][i]
+                    if type(self.rules[left_side][i])==type('aaa'):
+                        rule += self.rules[left_side][i] + " | "
+                    else:
+                        for temp_str in self.rules[left_side][i]:
+                            rule+=temp_str
+                        rule+= " | "
+                else:   
+                    if type(self.rules[left_side][i])==type('aaa'):
+                        rule += self.rules[left_side][i]
+                    else:
+                        for temp_str in self.rules[left_side][i]:
+                            rule+=temp_str
 
             print(rule)
 
@@ -285,16 +293,15 @@ if __name__ == '__main__':
     # E = Grammar({'S', 'A', 'B', 'C', 'D'}, {'1', '0', '2', '3'},
     #             {'A': ['B', 'A'], 'C': ['D', 'D2'], 'D': ['123', '1', '2', '3']}, 'S')
 
-    H = Grammar({'A', 'B', 'S'}, {'a', 'b'}, {'S': ['aA'], 'A': ['AB'], 'B': ['b']}, 'S')
+   # H = Grammar({'A', 'B', 'S'}, {'a', 'b'}, {'S': ['aA'], 'A': ['AB'], 'B': ['b']}, 'S')
     temp = Grammar({'A','B','C'},{'a','b'}, { 'A': ['BC','a'], 'B': ['CA','Ab'], 'C': ['AB', 'CC', 'a']}, 'A')
     temp.print()
     temp = temp.remove_left_recursion()
-    pprint.pprint(vars(temp))
+    temp.print()
     temp.remove_useless_symbols()
     temp.is_not_empty()
     E = Grammar({'E','T','F'},{'+','(',')','*', 'a'},{'E': ['E+T', 'T'], 'T': ['T*F','F'], 'F': ['(E)','a']},'E')
     E = E.remove_left_recursion()
-    pprint.pprint(vars(E))
+    E.print()
     E = E.remove_useless_symbols()
-    pprint.pprint(vars(E))
-
+    E.print()
