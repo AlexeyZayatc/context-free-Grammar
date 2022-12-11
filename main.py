@@ -9,7 +9,11 @@ class Grammar:
             raise Exception("Axiom is not in the non-terminals.")
         if not set(rules.keys()).issubset(non_terminals):
             raise Exception("Grammar is not content-independent.")
-
+        for rule_left_side in rules:
+            for rule_right_side in rules[rule_left_side]:
+                for symbol in rule_right_side:
+                    if symbol not in terminals and symbol not in non_terminals:
+                        raise Exception("At least one symbol from the right side of the rules is not in symbols of grammar.")
         # нетерминалы
         self.non_terminals = non_terminals
 
@@ -42,15 +46,14 @@ class Grammar:
                 # проходимся по правилам и проверяем,
                 # есть ли левая сторона правила в достижимых нетерминалах
                 if rule_left_side in reachable_non_terminals_original:
-                    for rule in self.rules[rule_left_side]:
+                    for rule_output in self.rules[rule_left_side]:
 
                         # проходимся по выводам правила и добавляем символы из этих выводов в достижимые
-                        rule_output = rule
-                        for char in rule_output:
-                            if char in self.terminals:
-                                reachable_terminals.add(char)
-                            if char in self.non_terminals:
-                                reachable_non_terminals_original.add(char)
+                        for symbol in rule_output:
+                            if symbol in self.terminals:
+                                reachable_terminals.add(symbol)
+                            if symbol in self.non_terminals:
+                                reachable_non_terminals_original.add(symbol)
 
             # убираем все достижимые нетерминалы,
             # которые уже проходили через верхний цикл (difference - разность множеств)
@@ -68,7 +71,7 @@ class Grammar:
         # если достижимые нетерминалы совпадают с теми,
         # что были изначально определены в грамматике, то возвращаем новую, идентичную этой грамматику
         if self.non_terminals == reachable_non_terminals:
-            return Grammar(self.non_terminals.copy(), reachable_terminals.copy(), self.rules.copy(), self.axiom)
+            return self.copy()
 
         # в противном случае создаем новые правила вывода,
         # в которых будут все старые, кроме тех,
@@ -83,53 +86,6 @@ class Grammar:
             # достижимыми терминалами и нетерминалами,
             # и новыми правилами вывода
             return Grammar(reachable_non_terminals, reachable_terminals, new_rules, self.axiom)
-
-    def print(self):
-        """ Функция печати грамматики"""
-        print("-" * 18)
-        print('Non-terminals: ')
-        non_terminals = ""
-
-        for non_terminal in self.non_terminals:
-            non_terminals += non_terminal + ' '
-
-        print(non_terminals)
-        print('\n')
-
-        print('Terminals: ')
-        terminals = ""
-
-        for terminal in self.terminals:
-            terminals += terminal + ' '
-
-        print(terminals)
-        print('\n')
-
-        print('Rules of conclusion: ')
-
-        for left_side in self.rules:
-            rule = left_side + ' -> '
-            for i in range(len(self.rules[left_side])):
-                if i != len(self.rules[left_side]) - 1:
-                    if type(self.rules[left_side][i])==type('aaa'):
-                        rule += self.rules[left_side][i] + " | "
-                    else:
-                        for temp_str in self.rules[left_side][i]:
-                            rule+=temp_str
-                        rule+= " | "
-                else:   
-                    if type(self.rules[left_side][i])==type('aaa'):
-                        rule += self.rules[left_side][i]
-                    else:
-                        for temp_str in self.rules[left_side][i]:
-                            rule+=temp_str
-
-            print(rule)
-
-        print('\n')
-
-        print("Аксиома: " + self.axiom)
-        print(18 * "-")
 
     def is_contain_nn(self, string: str, symbols: set) -> bool:
         if not string: return False
@@ -200,10 +156,6 @@ class Grammar:
             return None
         return without_useless
 
-    def copy(self):
-        new_grammar = Grammar(self.non_terminals.copy(),self.terminals.copy(), self.rules.copy(),self.axiom)
-        return new_grammar
-
     def remove_left_recursion(self):
         new_grammar = self.copy() #новая грамматика чтобы её вернуть
         rule_array = tuple(self.rules) #упорядочил) нетерминалы
@@ -273,8 +225,103 @@ class Grammar:
               
         return new_grammar
        
+    # классы эквивалентности для тестов: 
+    # зацикленность (из нетерминала выводится этот же нетерминал)
+    # зацикленность (A -> aBC | C; C -> A)
+    # нетерминал в выводе не один (A -> B | C)
+    # правая часть правила вывода это нетерминал, которого нет в левой части ни одного из правил вывода(т.е. например, A -> Ba; B -> C, и из C нету вывода)
+    def remove_chain_rules(self):
+        """ Возвращает грамматику без цепных правил (при этом нынешнюю грамматику не меняет) """
+        chain_non_terminals = dict()  # тут будут хранится все множества из цепных нетерминалов (т.е. NA, NB, ... по обозначениям из видео по этому алгосу)
 
- 
+        # здесь заполняем chain_non_terminals
+        for non_terminal in self.non_terminals:
+            chain_non_terminals_key = non_terminal  # с этого нетерминала начинается множество цепных нетерминалов (мцн)
+            chain_non_terminals_value = set()  # здесь будут все цепные нетерминалы исходящие из chain_non_terminals_key
+            self.fill_chain_non_terminals_value(chain_non_terminals_key, chain_non_terminals_value, non_terminal)  # заполняем chain_non_terminals_value (т.е. ищем все цепные нетерминалы исходящие из chain_non_terminals_key)
+            chain_non_terminals[chain_non_terminals_key] = chain_non_terminals_value  # "объединяем" chain_non_terminals_key и chain_non_terminals_value
+
+        new_rules = dict()
+        for first_chain_non_terminal in chain_non_terminals:  # проходимся по первым нетерминалам из всех множеств цепных нетерминалов
+            rule_outputs = list()  # здесь будут правые части правила в новой грамматике исходящие из first_chain_non_terminal
+            if first_chain_non_terminal in self.rules:
+                for rule_output in self.rules[first_chain_non_terminal]:  # сначала проходимся по правым частям правил исходящих из first_chain_non_terminal
+                    if not (len(rule_output) == 1 and rule_output[0] in self.non_terminals):
+                        rule_outputs.append(rule_output)  # и добавляем в rule_outputs правые части, которые не состоят из одного нетерминала
+
+                for non_terminal in chain_non_terminals[first_chain_non_terminal]:  # затем проходимся по правым частям правил исходящих из всех остальных цепных нетерминалов из множества с первым нетерминалом first_chain_non_terminal
+                    if non_terminal in self.rules:
+                        for rule_output in self.rules[non_terminal]:
+                            if not (len(rule_output) == 1 and rule_output[0] in self.non_terminals):
+                                rule_outputs.append(rule_output)  # и делаем тоже самое
+
+                if rule_outputs:  # если не пуст, то добавляем в правила новой грамматики
+                    new_rules[first_chain_non_terminal] = rule_outputs
+
+        new_grammar = self.copy()
+        new_grammar.rules = new_rules
+        new_grammar = new_grammar.remove_unreachable_symbols()  # устраняем недостижимые символы
+        new_grammar.terminals = self.terminals.copy()  # в возваращаемой грамматике изменяются только нетерминалы и правила вывода
+        return new_grammar
+
+    def fill_chain_non_terminals_value(self, key: str, value: set, non_terminal: str) -> set:  # рот шатал в вайл тру это делать, поэтому рекурсия
+        if non_terminal in self.rules:
+            for rule_output in self.rules[non_terminal]:  # проходимся по правым частям правил исходящих из non_terminal и проверяем состоят ли они из одного нетерминала
+                if (len(rule_output) == 1 and rule_output[0] in self.non_terminals):
+                    if (rule_output[0] not in value and rule_output[0] != key):  # проверка на зацикленность рекурсии
+                        value.add(rule_output[0])  # и если состоят, то добавляем этот нетерминал в множество цепных нетерминалов (мцн)
+                        self.fill_chain_non_terminals_value(key, value, rule_output[0])  # и далее ищем цепные нетерминалы исходящие из добавленного в мцн нетерминала
+
+    def copy(self):
+        new_grammar = Grammar(self.non_terminals.copy(), self.terminals.copy(), self.rules.copy(), self.axiom)
+        return new_grammar
+        
+    def print(self):
+        """ Функция печати грамматики"""
+        print("-" * 18)
+        print('Non-terminals: ')
+        non_terminals = ""
+
+        for non_terminal in self.non_terminals:
+            non_terminals += non_terminal + ' '
+
+        print(non_terminals)
+        print('\n')
+
+        print('Terminals: ')
+        terminals = ""
+
+        for terminal in self.terminals:
+            terminals += terminal + ' '
+
+        print(terminals)
+        print('\n')
+
+        print('Rules of conclusion: ')
+
+        for left_side in self.rules:
+            rule = left_side + ' -> '
+            for i in range(len(self.rules[left_side])):
+                if i != len(self.rules[left_side]) - 1:
+                    if type(self.rules[left_side][i])==type('aaa'):
+                        rule += self.rules[left_side][i] + " | "
+                    else:
+                        for temp_str in self.rules[left_side][i]:
+                            rule+=temp_str
+                        rule+= " | "
+                else:   
+                    if type(self.rules[left_side][i])==type('aaa'):
+                        rule += self.rules[left_side][i]
+                    else:
+                        for temp_str in self.rules[left_side][i]:
+                            rule+=temp_str
+
+            print(rule)
+
+        print('\n')
+
+        print("Axiom: " + self.axiom)
+        print(18 * "-")
 
 
 if __name__ == '__main__':
@@ -289,7 +336,7 @@ if __name__ == '__main__':
     # G.print()
 
    # F = Grammar({'S'}, {'1', '0'}, {'S': ['0', '1', '0S', '1S']}, 'S')
-    F = Grammar({'A',}, {'0',}, {'A': ['']}, 'A')
+    F = Grammar({'A'}, {'0'}, {'A': ['']}, 'A')
     # E = Grammar({'S', 'A', 'B', 'C', 'D'}, {'1', '0', '2', '3'},
     #             {'A': ['B', 'A'], 'C': ['D', 'D2'], 'D': ['123', '1', '2', '3']}, 'S')
 
@@ -305,3 +352,14 @@ if __name__ == '__main__':
     E.print()
     E = E.remove_useless_symbols()
     E.print()
+
+    M = Grammar({'A', 'B', 'C', 'D'}, {'a', 'b', 'c'},
+                 {
+                    'A': [['A'], ['C'], ['A', 'c'], ['B']],
+                    'B': [['C'], ['a']],
+                    'C': [['b']]
+                 },
+                 'A')
+    M.print()
+    M = M.remove_chain_rules()
+    M.print()
