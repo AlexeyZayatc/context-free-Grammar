@@ -195,8 +195,8 @@ class MyTestCase(unittest.TestCase):
             )
         empty_grammar_no_axiom_rule: Grammar = Grammar(
             {'A','B','S'},
-            {'a,b,c'},
-            {'A' : 'a', 'B': 'bcA'},
+            {'a','b','c'},
+            {'A' : [['a']], 'B': [['b','c','A']]},
             'S'
             )
         empty_grammar_no_terminal_chain: Grammar = Grammar(
