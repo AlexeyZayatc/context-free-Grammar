@@ -72,7 +72,7 @@ class Grammar:
 
         # если достижимые нетерминалы совпадают с теми,
         # что были изначально определены в грамматике, то возвращаем новую, идентичную этой грамматику
-        if self.non_terminals == reachable_non_terminals:
+        if self.non_terminals == reachable_non_terminals and self.terminals == reachable_terminals:
             return self.copy()
 
         # в противном случае создаем новые правила вывода,
@@ -382,3 +382,17 @@ if __name__ == '__main__':
     M.print()
     M = M.remove_chain_rules()
     M.print()
+
+    L = Grammar(
+            {'S','A','B','C'},
+            {'1','2','3'},
+            {
+            'S': ['A'],
+            'A': ['B'],
+            'B': ['C'],
+            },
+            'S'
+        )
+    L.print()
+    L = L.remove_unreachable_symbols()
+    L.print()
