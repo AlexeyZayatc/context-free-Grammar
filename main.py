@@ -1,10 +1,14 @@
 from __future__ import annotations
 import pprint
 from abc import ABC, abstractmethod
+import string
 from typing import Union
 
 
 class Grammar:
+    term = string.ascii_lowercase
+    var = string.ascii_uppercase
+
     def __init__(self, non_terminals: set, terminals: set, rules: dict, axiom: str):
         if axiom not in non_terminals:
             raise Exception("Axiom is not in the non-terminals.")
@@ -14,8 +18,8 @@ class Grammar:
             for rule_right_side in rules[rule_left_side]:
                 for symbol in rule_right_side:
                     if symbol not in terminals and symbol not in non_terminals:
-                        raise Exception(
-                            "At least one symbol from the right side of the rules is not in symbols of grammar.")
+                        raise Exception("At least one symbol from the right side of the " +
+                                        "rules is not in symbols of grammar.")
         # нетерминалы
         self.non_terminals = non_terminals
 
@@ -29,7 +33,8 @@ class Grammar:
         self.axiom = axiom
 
     def __eq__(self, other):
-        return self.non_terminals == other.non_terminals and self.terminals == other.terminals and self.rules == other.rules and self.axiom == other.axiom
+        return self.non_terminals == other.non_terminals and self.terminals == other.terminals \
+               and self.rules == other.rules and self.axiom == other.axiom
 
     def remove_unreachable_symbols(self) -> Grammar:
         """ Возвращает грамматику без недостижимых символов (при этом нынешнюю грамматику не меняет) """
@@ -90,13 +95,15 @@ class Grammar:
             return Grammar(reachable_non_terminals, reachable_terminals, new_rules, self.axiom)
 
     def is_contain_nn(self, string: str, symbols: set) -> bool:
-        if not string: return False
+        if not string:
+            return False
         for symbol in string:
             if symbol not in self.terminals and symbol not in symbols:
                 return False
         return True
 
     def get_good_non_terminals(self) -> set:
+        """ Возвращает все хорошие нетерминалы """
         non_terminals: set = set()
         good_non_terminals: set = non_terminals.copy()
 
@@ -180,7 +187,7 @@ class Grammar:
                             if k == len(temp_rule):
                                 continue
                             new_temp_rule = (
-                            temp_rule[k:len(temp_rule)])  # оставляем только правую часть, после k повторений
+                                temp_rule[k:len(temp_rule)])  # оставляем только правую часть, после k повторений
                             new_non_terminal_rules.append(
                                 new_temp_rule)  # добавляем это правило в правила нового нетерминала
                             temp_list = list(new_temp_rule)
@@ -207,16 +214,16 @@ class Grammar:
             while True:
                 temp_rule = {rule_array[i]: []}  # временные правила
                 for o, rule_item in enumerate(new_grammar.rules[rule_array[i]]):
-                    if rule_item[0] == rule_array[
-                        j]:  # если в нашем правиле в начале стоит нетерминал, который имеет индекс меньше, то заменяем его на правые части правил из НЕГО
+                    if rule_item[0] == rule_array[j]:  # если в нашем правиле в начале стоит нетерминал,
+                        # который имеет индекс меньше, то заменяем его на правые части правил из НЕГО
                         for n, rule_item_temp in enumerate(new_grammar.rules[rule_array[j]]):
                             if type(rule_item_temp) == type('abc'):
                                 temp_right_side = rule_item_temp
                             else:
                                 temp_right_side = rule_item_temp.copy()
                             k = 0
-                            while k < len(
-                                    rule_item):  # скипаем первые k повторений нашего нетерминала (не проверил, может ли тут быть пустота по итогу)
+                            while k < len(rule_item):  # скипаем первые k повторений нашего нетерминала
+                                # (не проверил, может ли тут быть пустота по итогу)
                                 if rule_item[k] == rule_array[j]:
                                     k += 1
                                 else:
@@ -238,7 +245,9 @@ class Grammar:
     # зацикленность (из нетерминала выводится этот же нетерминал)
     # зацикленность (A -> aBC | C; C -> A)
     # нетерминал в выводе не один (A -> B | C)
-    # правая часть правила вывода это нетерминал, которого нет в левой части ни одного из правил вывода(т.е. например, A -> Ba; B -> C, и из C нету вывода)
+    # правая часть правила вывода это нетерминал,
+    # которого нет в левой части ни одного из
+    # правил вывода(т.е. например, A -> Ba; B -> C, и из C нету вывода)
     def remove_chain_rules(self):
         """ Возвращает грамматику без цепных правил (при этом нынешнюю грамматику не меняет) """
         chain_non_terminals = dict()  # тут будут хранится все множества из цепных нетерминалов (т.е. NA, NB, ... по обозначениям из видео по этому алгосу)
@@ -253,17 +262,21 @@ class Grammar:
                 chain_non_terminals_key] = chain_non_terminals_value  # "объединяем" chain_non_terminals_key и chain_non_terminals_value
 
         new_rules = dict()
-        for first_chain_non_terminal in chain_non_terminals:  # проходимся по первым нетерминалам из всех множеств цепных нетерминалов
-            rule_outputs = list()  # здесь будут правые части правила в новой грамматике исходящие из first_chain_non_terminal
+        for first_chain_non_terminal in chain_non_terminals:  # проходимся по первым
+            # нетерминалам из всех множеств цепных нетерминалов
+            rule_outputs = list()  # здесь будут правые части правила в новой
+            # грамматике исходящие из first_chain_non_terminal
             if first_chain_non_terminal in self.rules:
-                for rule_output in self.rules[
-                    first_chain_non_terminal]:  # сначала проходимся по правым частям правил исходящих из first_chain_non_terminal
+                for rule_output in self.rules[first_chain_non_terminal]:  # сначала проходимся по правым
+                    # частям правил исходящих из first_chain_non_terminal
                     if not (len(rule_output) == 1 and rule_output[0] in self.non_terminals):
                         rule_outputs.append(
-                            rule_output)  # и добавляем в rule_outputs правые части, которые не состоят из одного нетерминала
+                            rule_output)  # и добавляем в rule_outputs правые части,
+                        # которые не состоят из одного нетерминала
 
-                for non_terminal in chain_non_terminals[
-                    first_chain_non_terminal]:  # затем проходимся по правым частям правил исходящих из всех остальных цепных нетерминалов из множества с первым нетерминалом first_chain_non_terminal
+                for non_terminal in chain_non_terminals[first_chain_non_terminal]:
+                    # затем проходимся по правым частям правил исходящих из всех
+                    # остальных цепных нетерминалов из множества с первым нетерминалом first_chain_non_terminal
                     if non_terminal in self.rules:
                         for rule_output in self.rules[non_terminal]:
                             if not (len(rule_output) == 1 and rule_output[0] in self.non_terminals):
@@ -281,14 +294,121 @@ class Grammar:
     def fill_chain_non_terminals_value(self, key: str, value: set,
                                        non_terminal: str) -> set:  # рот шатал в вайл тру это делать, поэтому рекурсия
         if non_terminal in self.rules:
-            for rule_output in self.rules[
-                non_terminal]:  # проходимся по правым частям правил исходящих из non_terminal и проверяем состоят ли они из одного нетерминала
-                if (len(rule_output) == 1 and rule_output[0] in self.non_terminals):
-                    if (rule_output[0] not in value and rule_output[0] != key):  # проверка на зацикленность рекурсии
-                        value.add(rule_output[
-                                      0])  # и если состоят, то добавляем этот нетерминал в множество цепных нетерминалов (мцн)
+            for rule_output in self.rules[non_terminal]:
+                # проходимся по правым частям правил исходящих из non_terminal
+                # и проверяем состоят ли они из одного нетерминала
+                if len(rule_output) == 1 and rule_output[0] in self.non_terminals:
+                    if rule_output[0] not in value and rule_output[0] != key:  # проверка на зацикленность рекурсии
+                        value.add(rule_output[0])  # и если состоят, то добавляем этот нетерминал
+                        # в множество цепных нетерминалов (мцн)
                         self.fill_chain_non_terminals_value(key, value, rule_output[
                             0])  # и далее ищем цепные нетерминалы исходящие из добавленного в мцн нетерминала
+
+    def get_new_var(self):
+        for v in self.var:
+            if v not in self.non_terminals:
+                self.non_terminals.add(v)
+                return v
+        for i in range(1, 100000):
+            for v in self.var:
+                vi = v + str(i)
+                if vi not in self.non_terminals:
+                    self.non_terminals.add(vi)
+                    return vi
+
+    def tokenize(self, s):
+        tokens = []
+        temp = ''
+        for i in range(len(s)):
+            c = s[i]
+            if i == len(s) - 1:
+                if c.isdigit():
+                    temp += c
+                    tokens.append(temp)
+                    temp = ''
+                else:
+                    if temp != '':
+                        tokens.append(temp)
+                    tokens.append(c)
+                return tokens
+            if c.isdigit():
+                temp += c
+            else:
+                if temp != '':
+                    tokens.append(temp)
+                temp = ''
+                if c in self.var:
+                    temp += c
+                else:
+                    tokens.append(c)
+        return tokens
+
+    def algorithm_chomsky(self):
+        """ Возвращает грамматику в НФХ """
+        for f, t in self.rules.items():
+            new_rules = []
+            for r in t:
+                new_rules.append(self.tokenize(r))
+            self.rules[f] = new_rules
+
+        new_start = self.get_new_var()
+
+        for t in self.rules.values():
+            for r in t:
+                for i in range(len(r)):
+                    if r[i] == 'S':
+                        r[i] = new_start
+
+        term_vars = {}
+        for f, t in self.rules.items():
+            new_rules = []
+            for r in t:
+                if len(r) == 1 and r[0] in self.term:
+                    new_rules.append([r[0]])
+                    continue
+                new_r = []
+                for symbol in r:
+                    if symbol in self.term:
+                        if symbol not in term_vars:
+                            term_vars[symbol] = self.get_new_var()
+                        new_r.append(term_vars[symbol])
+                    else:
+                        new_r.append(symbol)
+                new_rules.append(new_r)
+            self.rules[f] = new_rules.copy()
+        var_terms = {}
+
+        for t, v in term_vars.items():
+            var_terms[v] = [[t]]
+        self.rules = {**self.rules, **var_terms}
+
+        has_long_rule = False
+        while True:
+            cut_var = {}
+            for f, t in self.rules.items():
+                new_rules = []
+                for r in t:
+                    rp = r.copy()
+                    if len(rp) > 2:
+                        has_long_rule = True
+                        new_var = self.get_new_var()
+                        cut_var[new_var] = [rp[1:]]
+                        rp = [r[0], new_var]
+                    new_rules.append(rp)
+                self.rules[f] = new_rules.copy()
+            self.rules = {**self.rules, **cut_var}
+            if not has_long_rule:
+                break
+            has_long_rule = False
+
+        for f, t in self.rules.items():
+            new_rules = []
+            for r in t:
+                new_r = ''
+                for symbol in r:
+                    new_r += symbol
+                new_rules.append(new_r)
+            self.rules[f] = new_rules
 
     def copy(self):
         new_grammar = Grammar(self.non_terminals.copy(), self.terminals.copy(), self.rules.copy(), self.axiom)
@@ -359,17 +479,22 @@ if __name__ == '__main__':
     #             {'A': ['B', 'A'], 'C': ['D', 'D2'], 'D': ['123', '1', '2', '3']}, 'S')
 
     # H = Grammar({'A', 'B', 'S'}, {'a', 'b'}, {'S': ['aA'], 'A': ['AB'], 'B': ['b']}, 'S')
-    temp = Grammar({'A', 'B', 'C'}, {'a', 'b'}, {'A': ['BC', 'a'], 'B': ['CA', 'Ab'], 'C': ['AB', 'CC', 'a']}, 'A')
-    temp.print()
-    temp = temp.remove_left_recursion()
-    temp.print()
-    temp.remove_useless_symbols()
-    temp.is_not_empty()
+    # temp = Grammar({'A', 'B', 'C'}, {'a', 'b'}, {'A': ['BC', 'a'], 'B': ['CA', 'Ab'], 'C': ['AB', 'CC', 'a']}, 'A')
+    # temp.print()
+    # temp = temp.remove_left_recursion()
+    # temp.print()
+    # temp.remove_useless_symbols()
+    # temp.is_not_empty()
     E = Grammar({'E', 'T', 'F'}, {'+', '(', ')', '*', 'a'}, {'E': ['E+T', 'T'], 'T': ['T*F', 'F'], 'F': ['(E)', 'a']},
                 'E')
-    E = E.remove_left_recursion()
-    E.print()
+    # E = E.remove_left_recursion()
+    # E.print()
     E = E.remove_useless_symbols()
+    E = E.remove_chain_rules()
+    E.print()
+    print()
+
+    E.algorithm_chomsky()
     E.print()
 
     M = Grammar({'A', 'B', 'C', 'D'}, {'a', 'b', 'c'},
@@ -382,17 +507,37 @@ if __name__ == '__main__':
     M.print()
     M = M.remove_chain_rules()
     M.print()
-
+    M.algorithm_chomsky()
+    M.print()
+    print()
     L = Grammar(
-            {'S','A','B','C'},
-            {'1','2','3'},
-            {
+        {'S', 'A', 'B', 'C'},
+        {'1', '2', '3'},
+        {
             'S': ['A'],
             'A': ['B'],
             'B': ['C'],
-            },
-            'S'
-        )
+        },
+        'S'
+    )
     L.print()
     L = L.remove_unreachable_symbols()
     L.print()
+
+    L.algorithm_chomsky()
+    L.print()
+
+    P = Grammar(
+        {'S', 'A', 'B'},
+        {'a', 'b'},
+        {
+            'S': [['a', 'A', 'B', ], ['A', 'B', ]],
+            'A': [['B', 'B', 'B', ], 'a'],
+            'B': [['A', 'S', ], 'a'],
+        },
+        'S'
+    )
+
+    P.print()
+    P.algorithm_chomsky()
+    P.print()
