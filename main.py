@@ -344,7 +344,7 @@ class Grammar:
         return tokens
 
     def algorithm_chomsky(self):
-        """ Возвращает грамматику в НМХ """
+        """ Возвращает грамматику в НФХ """
         for f, t in self.rules.items():
             new_rules = []
             for r in t:
