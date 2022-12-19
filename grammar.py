@@ -86,12 +86,7 @@ class CFG:
          return temp
      
      def copy(self):
-         temp = CFG({'A'},{},{},'A')
-         temp.non_terminals=self.non_terminals.copy()
-         temp.terminals=self.terminals.copy()
-         temp.rules=self.rules.copy()
-         temp.axiom = self.axiom.copy()
-         return temp
+         return self.token_constructor(self.non_terminals, self.terminals, self.rules, self.axiom)
 
      def __eq__(self, other):
         return self.non_terminals == other.non_terminals and self.terminals == other.terminals \
