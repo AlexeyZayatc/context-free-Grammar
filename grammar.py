@@ -274,14 +274,12 @@ class CFG:
                     for m, temp_rule in enumerate(
                             new_grammar.rules[rule_array[i]]):  # проходим опять по каждому правилу
                         if temp_rule[0] == rule_array[i]:  # если вызывается левая рекурсия
-                            k = 0
-                            while k < len(temp_rule):  # скипаем первые k повторений нашего нетерминала
-                                if temp_rule[k] == rule_array[i]:
-                                    k += 1
-                                else:
-                                    break
-                            if k == len(temp_rule):
-                                continue
+                            k = 1
+                            #while k < len(temp_rule):  # скипаем первые k повторений нашего нетерминала
+                            #    if temp_rule[k] == rule_array[i]:
+                            #        k += 1
+                            #    else:
+                            #        break
 
                             new_temp_rule = (
                                 temp_rule[k:len(temp_rule)])  # оставляем только правую часть, после k повторений
@@ -315,13 +313,13 @@ class CFG:
                         # который имеет индекс меньше, то заменяем его на правые части правил из НЕГО
                         for n, rule_item_temp in enumerate(new_grammar.rules[rule_array[j]]):
                             temp_right_side = rule_item_temp.copy()
-                            k = 0
-                            while k < len(rule_item):  # скипаем первые k повторений нашего нетерминала
-                                # (не проверил, может ли тут быть пустота по итогу)
-                                if rule_item[k] == rule_array[j]:
-                                    k += 1
-                                else:
-                                    break
+                            k = 1
+                            #while k < len(rule_item):  # скипаем первые k повторений нашего нетерминала
+                            #    # (не проверил, может ли тут быть пустота по итогу)
+                            #    if rule_item[k] == rule_array[j]:
+                            #        k += 1
+                            #    else:
+                            #        break
                             for k in range(k,len(rule_item)):
                                 temp_right_side.append(rule_item[k])
                             if len(temp_right_side) >0:
@@ -414,6 +412,6 @@ if __name__ == "__main__":
                     'C': [['b']]
                 },
                 'A')
-    M.print()
-    M = M.remove_chain_rules()
-    M.print()
+    temp.print()
+    temp = temp.remove_left_recursion()
+    temp.print()
