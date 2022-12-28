@@ -35,6 +35,8 @@ def to_array_of_tokens(sstr):
     array_of_tokens = []
     for ch in sstr:
         array_of_tokens.append(Token(ch,'char'))
+    if len(array_of_tokens)==0:
+        array_of_tokens.append(Token('','char'))
     return array_of_tokens
 
 def to_set_of_tokens(sstr):
@@ -256,7 +258,7 @@ class CFG:
                     new_rules[non_terminal] = self.rules[non_terminal].copy()
 
             if len(reachable_non_terminals) == 1 and len(reachable_terminals) == 0 and len(new_rules) == 0:
-                new_rules[self.axiom] = ['']
+                new_rules[self.axiom] = [[Token('','char')]]
             # и возвращаем граматику с
             # достижимыми терминалами и нетерминалами,
             # и новыми правилами вывода
@@ -277,7 +279,7 @@ class CFG:
      def remove_left_recursion(self):
         if  not self.is_not_empty():
             if type(self.axiom) == Token:
-                 return self.token_constructor({self.axiom}, set(), {self.axiom: ['']},self.axiom)
+                 return self.token_constructor({self.axiom}, set(), {self.axiom: [[Token('','char')]]},self.axiom)
             else:
                  return CFG({self.axiom}, set(), {self.axiom: ['']},self.axiom)
 
@@ -412,7 +414,12 @@ class CFG:
                             0])  # и далее ищем цепные нетерминалы исходящие из добавленного в мцн нетерминала
 
 if __name__ == "__main__":
-    print('AMOGUS')
+    A = CFG({'E', 'T', 'F'}, 
+            {'+', '(', ')', '*', 'a'},
+           {'E': ['', 'T'],
+            'T': [''],
+           'F': ['(E)', 'a']},
+                'E')
     E = CFG({'E', 'T', 'F'}, 
             {'+', '(', ')', '*', 'a'},
            {'E': ['E+T', 'T'],

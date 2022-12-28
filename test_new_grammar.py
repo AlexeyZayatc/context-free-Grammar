@@ -262,7 +262,7 @@ class test_class(unittest.TestCase):
             )
         language_empty_answer: CFG = CFG(
             {'S'},
-            set(),
+            {'a','b'},
             {'S': ['']},
             'S'
             )
@@ -322,7 +322,7 @@ class test_class(unittest.TestCase):
         grammar_without_left_recursion = perferct_grammar.remove_left_recursion()
 
         self.assertEqual(perferct_grammar, grammar_without_left_recursion)
-        '''
+        
         test_case2: CFG = CFG(
             {'S', 'A', 'B'},
             {'c', 'd'},
@@ -342,7 +342,7 @@ class test_class(unittest.TestCase):
             'S'
         )
         self.assertEqual(test_case2.remove_left_recursion(), test_case2_answer)
-        '''
+        
         test_case3: CFG = CFG(
             {'A', 'B'},
             {'c', 'd'},
@@ -364,7 +364,7 @@ class test_class(unittest.TestCase):
             'A'
         )
         self.assertEqual(test_case3.remove_left_recursion(), test_case3_answer)
-        '''
+        
         test_case4: CFG = CFG(
             {'A', 'B'},
             {'c', 'd'},
@@ -374,7 +374,6 @@ class test_class(unittest.TestCase):
             },
             'A'
         )
-        test_case4.remove_left_recursion().print()
         test_case4_answer: CFG = CFG(
             {'A'},
             { },
@@ -384,7 +383,7 @@ class test_class(unittest.TestCase):
             'A'
         )
         self.assertEqual(test_case4.remove_left_recursion(), test_case4_answer)
-        '''
+       
 
         test_case5: CFG = CFG(
             {'A', 'B'},
@@ -395,8 +394,6 @@ class test_class(unittest.TestCase):
             },
             'A'
         )
-        test_case5.print()
-        test_case5.remove_left_recursion().print()
         test_case5_answer: CFG = CFG(
             {'A\'', 'A', 'B'},
             {'c', 'd'},
@@ -418,8 +415,6 @@ class test_class(unittest.TestCase):
             },
             'A'
         )
-        test_case6.print()
-        test_case6.remove_left_recursion().print()
         test_case6_answer: CFG = CFG(
             {'A\'', 'A'},
             {'c', 'd'},
