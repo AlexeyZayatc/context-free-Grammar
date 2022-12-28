@@ -255,6 +255,8 @@ class CFG:
                 if non_terminal in self.rules:
                     new_rules[non_terminal] = self.rules[non_terminal].copy()
 
+            if len(reachable_non_terminals) == 1 and len(reachable_terminals) == 0 and len(new_rules) == 0:
+                new_rules[self.axiom] = ['']
             # и возвращаем граматику с
             # достижимыми терминалами и нетерминалами,
             # и новыми правилами вывода
