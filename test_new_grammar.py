@@ -253,6 +253,61 @@ class test_class(unittest.TestCase):
 
         self.assertEqual(grammar_without_useless_symbols, test_case2_answer)
 
+    def test_remove_chain_rules(self):
+        language_empty : CFG = CFG(
+            {'S','A','B'},
+            {'a','b'},
+            {'A' : ['a','ab','B'], 'B' : ['A','Abb','bbaa']},
+            'S'
+            )
+        language_empty_answer: CFG = CFG(
+            {'S'},
+            set(),
+            {'S': ['']},
+            'S'
+            )
+        self.assertEqual(language_empty.remove_chain_rules(),language_empty_answer)
+        cycle_one_step: CFG = CFG(
+            {'S', 'A'},
+            {'a', 'b'},
+            {'S': ['S','Aab'], 'A' : ['ab','ba']},
+            'S'
+            )
+        cycle_one_step_answer: CFG = CFG(
+            {'S', 'A'},
+            {'a', 'b'},
+            {'S': ['Aab'], 'A' : ['ab','ba']},
+            'S'
+            )
+        self.assertEqual(cycle_one_step.remove_chain_rules(),cycle_one_step_answer)
+        cycle_more_steps: CFG = CFG(
+            {'S', 'A', 'B', 'C'},
+            {'a', 'b'},
+            {'S': ['Bab','Aab'], 'A' : ['abC','Cba'], 'B' : ['C','A','ba'], 'C': ['A','B','bab']},
+            'S'
+            )
+        cycle_more_steps_answer: CFG = CFG(
+            {'S', 'A', 'B', 'C'},
+            {'a', 'b'},
+            {'S': ['Bab','Aab'], 'A' : ['abC','Cba'], 'B' : ['ba', 'bab','abC','Cba'], 'C': ['abC','Cba','ba','bab']},
+            'S'
+            )
+        self.assertEqual(cycle_more_steps.remove_chain_rules(),cycle_more_steps_answer)
+        useless_non_terminal: CFG = CFG(
+            {'A', 'B', 'C'},
+            {'a', 'b'},
+            {'A': ['Ba','B'], 'B' : ['C','bab']},
+            'A'
+            )
+        useless_non_terminal_answer: CFG = CFG(
+            {'A', 'B'},
+            {'a', 'b'},
+            {'A': ['Ba','bab'], 'B' : ['bab']},
+            'A'
+            )
+        self.assertEqual(useless_non_terminal.remove_chain_rules(),useless_non_terminal_answer)
+
+
 
 if __name__ == '__main__':
     unittest.main()

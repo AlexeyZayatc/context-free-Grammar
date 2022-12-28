@@ -5,7 +5,10 @@ class Token:
 
     def __str__(self):
         return '({lexem},{lexem_type})'.format(lexem=self.lexem,lexem_type=self.token_type)
-   
+    
+    def __lt__(self, other):
+        return self.lexem<other.lexem
+
     def __eq__(self, other):
         if type(other)==Token:
             return other.lexem == self.lexem and other.token_type==self.token_type
@@ -18,13 +21,10 @@ class Token:
 
     def __hash__(self):
         isum = 0
-        i = 1
         for ch in self.lexem:
-            isum+=i*ord(ch)
-            i+=1
+            isum+=ord(ch)
         for ch in self.token_type:
-            isum+=i*ord(ch)
-            i+=1
+            isum+=ord(ch)
         return isum
 
     def copy(self):
@@ -89,8 +89,16 @@ class CFG:
          return self.token_constructor(self.non_terminals, self.terminals, self.rules, self.axiom)
 
      def __eq__(self, other):
-        return self.non_terminals == other.non_terminals and self.terminals == other.terminals \
-               and self.rules == other.rules and self.axiom == other.axiom
+        if self.non_terminals == other.non_terminals and self.terminals == other.terminals \
+                and self.axiom == other.axiom:
+            if self.rules.keys()==other.rules.keys():
+                for rule in self.rules:
+                    if sorted(self.rules[rule])!=sorted(other.rules[rule]):
+                        return False
+                return True
+            else:
+                return False
+        return False
 
      def print(self):
         """ Функция печати грамматики"""
@@ -258,12 +266,23 @@ class CFG:
             without_useless = self.remove_bad_non_terminals_and_rules().remove_unreachable_symbols()
         except Exception as e:
             print(e)
-            return None
+            if type(self.axiom) == Token:
+                 return self.token_constructor({self.axiom}, set(), {self.axiom: ['']},self.axiom)
+            else:
+                 return CFG({self.axiom}, set(), {self.axiom: ['']},self.axiom)
         return without_useless
 
      def remove_left_recursion(self):
+        if  not self.is_not_empty():
+            if type(self.axiom) == Token:
+                 return self.token_constructor({self.axiom}, set(), {self.axiom: ['']},self.axiom)
+            else:
+                 return CFG({self.axiom}, set(), {self.axiom: ['']},self.axiom)
+
         new_grammar = self.copy()  # новая грамматика чтобы её вернуть
-        rule_array = tuple(self.rules)  # упорядочил) нетерминалы
+        new_grammar = new_grammar.remove_useless_symbols()
+        new_grammar = new_grammar.remove_chain_rules()
+        rule_array = tuple(new_grammar.rules)  # упорядочил) нетерминалы
         i = 0  # счетчик (кто мог ожидать?)
         while True:
             for o, rule_item in enumerate(new_grammar.rules[rule_array[i]]):  # проверяю каждое правило
@@ -415,3 +434,12 @@ if __name__ == "__main__":
     temp.print()
     temp = temp.remove_left_recursion()
     temp.print()
+    test_case1 : CFG = CFG(
+    {'S','A','B'},
+    {'a','b'},
+    {'A' : ['a','ab','B'], 'B' : ['A','Abb','bbaa']},
+    'S'
+    )
+    test_case1.print()
+    test_case1 = test_case1.remove_chain_rules()
+    test_case1.print()
