@@ -307,7 +307,129 @@ class test_class(unittest.TestCase):
             )
         self.assertEqual(useless_non_terminal.remove_chain_rules(),useless_non_terminal_answer)
 
+    def test_grammar_remove_left_recursion(self):
+        original_grammar: CFG = CFG(
+            {'A', 'B'},
+            {'a', 'b', 'c', 'd'},
+            {
+                'A': ['aBb', 'cd'],
+                'B': ['c', 'd']
+            },
+            'A'
+        )
+        perferct_grammar = original_grammar.remove_unreachable_symbols().remove_useless_symbols().remove_chain_rules()
 
+        grammar_without_left_recursion = perferct_grammar.remove_left_recursion()
+
+        self.assertEqual(perferct_grammar, grammar_without_left_recursion)
+        '''
+        test_case2: CFG = CFG(
+            {'S', 'A', 'B'},
+            {'c', 'd'},
+            {
+                'A': ['AB', 'Acd'],
+                'B': ['c', 'd']
+            },
+            'S'
+        )
+
+        test_case2_answer: CFG = CFG(
+            {'S'},
+            { },
+            {
+                'S': ['']
+            },
+            'S'
+        )
+        self.assertEqual(test_case2.remove_left_recursion(), test_case2_answer)
+        '''
+        test_case3: CFG = CFG(
+            {'A', 'B'},
+            {'c', 'd'},
+            {
+                'A': ['Bc', 'Acd'],
+                'B': ['c', 'd']
+            },
+            'A'
+        )
+
+        test_case3_answer: CFG = CFG(
+            {'A\'', 'A', 'B'},
+            {'c', 'd'},
+            {
+                'A': ['cc', ['c','c','A\''], 'dc', ['d','c','A\'']],
+                'B': ['c', 'd'],
+                'A\'': ['cd', ['c', 'd', 'A\'']]
+            },
+            'A'
+        )
+        self.assertEqual(test_case3.remove_left_recursion(), test_case3_answer)
+        '''
+        test_case4: CFG = CFG(
+            {'A', 'B'},
+            {'c', 'd'},
+            {
+                'A': ['Bc'],
+                'B': ['Bc', 'Bd']
+            },
+            'A'
+        )
+        test_case4.remove_left_recursion().print()
+        test_case4_answer: CFG = CFG(
+            {'A'},
+            { },
+            {
+                'A': ['']
+            },
+            'A'
+        )
+        self.assertEqual(test_case4.remove_left_recursion(), test_case4_answer)
+        '''
+
+        test_case5: CFG = CFG(
+            {'A', 'B'},
+            {'c', 'd'},
+            {
+                'A': ['Bc', 'dc'],
+                'B': ['Ac', 'Ad']
+            },
+            'A'
+        )
+        test_case5.print()
+        test_case5.remove_left_recursion().print()
+        test_case5_answer: CFG = CFG(
+            {'A\'', 'A', 'B'},
+            {'c', 'd'},
+            {
+                'A': ['dc', ['d','c','A\'']],
+                'B': ['Ac', 'Ad'],
+                'A\'': ['cc', ['c', 'c', 'A\''], 'dc', ['d', 'c', 'A\'']]
+            },
+            'A'
+        )
+        self.assertEqual(test_case5.remove_left_recursion(), test_case5_answer)
+
+        test_case6: CFG = CFG(
+            {'A', 'B'},
+            {'c', 'd'},
+            {
+                'A': ['Ac', 'dc'],
+                'B': ['Ad']
+            },
+            'A'
+        )
+        test_case6.print()
+        test_case6.remove_left_recursion().print()
+        test_case6_answer: CFG = CFG(
+            {'A\'', 'A'},
+            {'c', 'd'},
+            {
+                'A': ['dc', ['d','c','A\'']],
+                'A\'': ['c', ['c','A\'']]
+            },
+            'A'
+        )
+        self.assertEqual(test_case6.remove_left_recursion(), test_case6_answer)
 
 if __name__ == '__main__':
     unittest.main()
